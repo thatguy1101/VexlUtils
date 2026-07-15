@@ -1,0 +1,99 @@
+# ==========================================================
+#  VexlUtils config
+# ==========================================================
+
+# Prefix added to every plugin message. & color codes supported.
+prefix: "&5&l✦ &d&lVEXLSMP &5&l✦ &r"
+
+# ----------------------------------------------------------
+#  Vaults  (/vexl vault <n>  or  /pv <n>)
+# ----------------------------------------------------------
+vaults:
+  max-vault-number: 99999    # hard ceiling regardless of permission
+  rows: 6                    # inventory rows per vault (6 = 54 slots)
+  default-vaults: 1          # granted just by having vexlutils.vault.use
+  # Grant a player vexlutils.vault.amount.<n> (any number) and their max becomes <n>.
+  # Highest matching amount node wins. No need to pre-declare every number in plugin.yml.
+
+# ----------------------------------------------------------
+#  Sign shops ([Shop] / [Sell])
+# ----------------------------------------------------------
+shops:
+  # Line1: [Shop] or [Sell]   Line2: amount   Line3: price   Line4: auto-filled with owner name
+  # After creating, punch (left-click) the sign while holding the item to sell/buy to set it.
+  allow-owner-edit: true       # shift-right-click own sign to re-edit amount/price
+  show-floating-item: true     # spawn a small floating item display above the sign
+
+# ----------------------------------------------------------
+#  Doors: [Public] signs + direct double-door sync, [Private] locks
+# ----------------------------------------------------------
+doors:
+  # If true, directly opening ANY door/gate/trapdoor also opens its adjacent matching
+  # pair (a "double door"), whether or not a sign is involved.
+  # CAUTION: this sets the neighbouring block's state directly and does not re-fire
+  # a PlayerInteractEvent, so it can bypass region-protection plugins (e.g. WorldGuard)
+  # on that neighbouring door. Leave this off if your doors sit on region borders.
+  sync-double-doors: true
+
+locks:
+  auto-lock-on-blank-sign: true   # blank sign placed on a door -> auto [Private] + your name
+
+# ----------------------------------------------------------
+#  Gambling  (/vexl vegas, /vegas, /v vegas - all open a GUI)
+# ----------------------------------------------------------
+gambling:
+  min-bet: 10
+  max-bet: 10000
+  quick-bets: [100, 500, 1000, 5000, 10000]
+
+  slots:
+    win-chance: 0.35
+    jackpot-chance: 0.03
+    payout-multiplier: 2.0
+    jackpot-multiplier: 5.0
+
+  coinflip:
+    payout-multiplier: 1.9
+
+  dice:
+    payout-multiplier: 5.5
+
+  roulette:
+    red-black-multiplier: 1.9
+    green-multiplier: 8.0
+    green-chance: 0.10
+
+  blackjack:
+    payout-multiplier: 2.0        # standard win
+    blackjack-multiplier: 2.5     # natural 21 on the deal
+
+  mines:
+    grid-size: 25        # 5x5
+    bomb-count: 5
+    # multiplier awarded per safe tile revealed (compounding)
+    multiplier-per-tile: 0.25
+
+  wheel:
+    # weighted outcomes - must sum sensibly, not required to total any specific number
+    segments:
+      "0": 30
+      "0.5": 20
+      "1.5": 20
+      "2": 15
+      "3": 8
+      "5": 5
+      "10": 2
+
+# ----------------------------------------------------------
+#  Disguise
+# ----------------------------------------------------------
+disguise:
+  sync-interval: 1              # ticks between shadow-mob position sync
+  mob-invulnerable: true        # if true, the shadow mob can't be damaged/killed
+  hide-self: true               # apply self-invisibility so you don't see your own real body
+
+# ----------------------------------------------------------
+#  Player warps ([Warp] signs, /playerwarp | /pwarp | /pw)
+# ----------------------------------------------------------
+warps:
+  default-public: false   # whether a newly-created warp starts public or private

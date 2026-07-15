@@ -1,0 +1,124 @@
+name: VexlUtils
+version: '${project.version}'
+main: mc.mod.vexlUtils.VexlUtils
+api-version: '1.21'
+author: Max
+description: All-in-one utility plugin for VEXL SMP - vaults, sign shops, door locks/sync, disguises, gambling, and player warps.
+
+softdepend: [Vault, CMI]
+
+commands:
+  vexl:
+    description: VexlUtils command hub
+    usage: /vexl <vault|shop|door|disguise|undisguise|vegas>
+    aliases: [v]
+  pv:
+    description: Quick-open a personal vault
+    usage: /pv [number]
+  vegas:
+    description: Open the gambling GUI
+    usage: /vegas
+  disguise:
+    description: Disguise as a mob
+    usage: /disguise <mob> [player]
+  undisguise:
+    description: Remove your disguise
+    usage: /undisguise
+  playerwarp:
+    description: Teleport to a public player warp
+    usage: /playerwarp <name>
+    aliases: [pwarp, pw]
+
+permissions:
+  # ---- vaults ----
+  vexlutils.vault.use:
+    description: Base access to vaults (grants the configured default-vaults count)
+    default: true
+  vexlutils.vault.amount.10:
+    description: "Example tier - grant a node like vexlutils.vault.amount.<n> to set someone's max vault to <n>"
+    default: false
+  vexlutils.vault.*:
+    description: Full vault range up to the configured hard cap, bypasses amount nodes
+    default: op
+  vexlutils.vault.admin:
+    description: Open and edit any player's vaults
+    default: op
+
+  # ---- sign shops ----
+  vexlutils.shop.create:
+    description: Create sign shops
+    default: op
+  vexlutils.shop.use:
+    description: Use (buy/sell at) sign shops
+    default: true
+  vexlutils.shop.edit:
+    description: Shift-click your own shop sign to edit it, punch it to set its item
+    default: true
+  vexlutils.shop.edit.others:
+    description: Edit or set the item on shop signs you don't own
+    default: op
+  vexlutils.shop.remove:
+    description: Break your own shop sign to remove it cleanly
+    default: true
+
+  # ---- doors / locks ----
+  vexlutils.door.create:
+    description: Create [Public] double-door signs
+    default: op
+  vexlutils.door.use:
+    description: Use [Public] double-door signs
+    default: true
+  vexlutils.lock.create:
+    description: Auto-protect doors with a blank sign ([Private])
+    default: true
+  vexlutils.lock.use:
+    description: Open doors you own via [Private] signs
+    default: true
+  vexlutils.lock.bypass:
+    description: Open any [Private] door regardless of ownership
+    default: op
+
+  # ---- disguise ----
+  vexlutils.disguise:
+    description: Disguise yourself as any mob
+    default: op
+  vexlutils.disguise.others:
+    description: Disguise other players
+    default: op
+
+  # ---- gambling ----
+  vexlutils.gambling:
+    description: Open the gambling GUI and base access
+    default: true
+  vexlutils.gambling.slots:
+    description: Play slots
+    default: true
+  vexlutils.gambling.coinflip:
+    description: Play coinflip
+    default: true
+  vexlutils.gambling.dice:
+    description: Play dice
+    default: true
+  vexlutils.gambling.roulette:
+    description: Play roulette
+    default: true
+  vexlutils.gambling.blackjack:
+    description: Play blackjack
+    default: true
+  vexlutils.gambling.mines:
+    description: Play mines
+    default: true
+  vexlutils.gambling.wheel:
+    description: Play the wheel
+    default: true
+
+  # ---- player warps ----
+  vexlutils.warp.create:
+    description: Place [Warp] signs to create a personal warp
+    default: true
+  vexlutils.warp.use:
+    description: Use /playerwarp (or /pwarp, /pw) and public warp signs
+    default: true
+  vexlutils.warp.admin:
+    description: Teleport to or remove any warp regardless of owner/public status
+    default: op
