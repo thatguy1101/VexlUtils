@@ -32,7 +32,17 @@ public class WarpCommand implements CommandExecutor, TabCompleter {
             return true;
         }
         if (args.length < 1) {
-            plugin.getMessages().error(player, "Usage: /playerwarp <name> (aliases: /pwarp, /pw)");
+            plugin.getMessages().error(player, "Usage: /playerwarp <name|list> (aliases: /pwarp, /pw)");
+            return true;
+        }
+
+        if (args[0].equalsIgnoreCase("list")) {
+            List<String> names = plugin.getWarpManager().namesVisibleTo(player);
+            if (names.isEmpty()) {
+                plugin.getMessages().send(player, "&7No warps available yet.");
+            } else {
+                plugin.getMessages().send(player, "&eAvailable warps: &f" + String.join("&7, &f", names));
+            }
             return true;
         }
 
@@ -63,7 +73,9 @@ public class WarpCommand implements CommandExecutor, TabCompleter {
             return new ArrayList<>();
         }
         String current = args[0].toLowerCase();
-        return plugin.getWarpManager().namesVisibleTo(player).stream()
+        List<String> options = new ArrayList<>(plugin.getWarpManager().namesVisibleTo(player));
+        options.add("list");
+        return options.stream()
                 .filter(n -> n.toLowerCase().startsWith(current))
                 .collect(Collectors.toList());
     }

@@ -46,6 +46,14 @@ public class WarpListener implements Listener {
             return;
         }
 
+        String existingWarp = plugin.getWarpManager().getWarpOwnedBy(player.getUniqueId());
+        boolean editingOwnWarp = existingWarp != null && existingWarp.equalsIgnoreCase(name);
+        if (existingWarp != null && !editingOwnWarp && !player.hasPermission("vexlutils.warp.multiple")) {
+            plugin.getMessages().error(player, "You already have a warp ('" + existingWarp + "'). Break that sign first, or place a new [Warp] sign named '" + existingWarp + "' to move it.");
+            event.setLine(0, ChatColor.RED + "[bad warp]");
+            return;
+        }
+
         WarpManager.Warp warp = plugin.getWarpManager().createOrUpdate(player, name, event.getBlock().getLocation().add(0.5, 0, 0.5));
 
         boolean sameAsOwner = name.equalsIgnoreCase(player.getName());

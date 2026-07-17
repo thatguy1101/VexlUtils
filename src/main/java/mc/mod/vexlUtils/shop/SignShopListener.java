@@ -428,6 +428,60 @@ public class SignShopListener implements Listener {
         }
     }
 
+    /** Protects a shop's linked chest the same as its sign, and cleans up the hologram if the chest is removed. */
+    @EventHandler
+    public void onChestBreak(BlockBreakEvent event) {
+        if (!(event.getBlock().getState() instanceof Chest)) {
+            return;
+        }
+        Block chestBlock = event.getBlock();
+        String chestLocStr = locationToString(chestBlock.getLocation());
+        Player player = event.getPlayer();
+
+        for (BlockFace face : NEIGHBOURS) {
+            Block neighbour = chestBlock.getRelative(face);
+            if (!(neighbour.getState() instanceof Sign sign)) {
+                continue;
+            }
+            String line0 = ChatColor.stripColor(sign.getLine(0)).trim();
+            if (!line0.equalsIgnoreCase("[shop]") && !line0.equalsIgnoreCase("[sell]")) {
+                continue;
+            }
+
+            PersistentDataContainer pdc = sign.getPersistentDataContainer();
+            String linkedChest = pdc.get(Keys.chest(), PersistentDataType.STRING);
+            if (linkedChest == null || !linkedChest.equals(chestLocStr)) {
+                continue;
+            }
+
+            UUID owner = getOwner(neighbour);
+            boolean owns = owner != null && owner.equals(player.getUniqueId());
+            if (!owns && !player.hasPermission("vexlutils.shop.edit.others")) {
+                plugin.getMessages().error(player, "That chest is linked to a shop you don't own.");
+                event.setCancelled(true);
+                return;
+            }
+
+            try {
+                String uuidStr = pdc.get(Keys.display(), PersistentDataType.STRING);
+                if (uuidStr != null) {
+                    Entity display = org.bukkit.Bukkit.getEntity(UUID.fromString(uuidStr));
+                    if (display != null) {
+                        display.remove();
+                    }
+                }
+            } catch (Exception e) {
+                plugin.getLogger().warning("Failed to clean up shop display entity on chest break: " + e.getMessage());
+            }
+
+            pdc.remove(Keys.chest());
+            pdc.remove(Keys.display());
+            sign.update(true, false);
+            plugin.getMessages().send(player, "&eUnlinked that chest from the shop sign (now unlimited stock).");
+            return;
+        }
+    }
+
     // ---------- Helpers ----------
 
     private Block findAdjacentChest(Block signBlock) {

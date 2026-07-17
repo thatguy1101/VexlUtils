@@ -107,6 +107,16 @@ public class WarpManager {
         return warps.get(name.toLowerCase());
     }
 
+    /** Returns the display name of a warp this player already owns, or null if they own none. */
+    public String getWarpOwnedBy(UUID owner) {
+        for (Warp w : warps.values()) {
+            if (w.owner.equals(owner)) {
+                return w.displayName;
+            }
+        }
+        return null;
+    }
+
     public void remove(String name) {
         warps.remove(name.toLowerCase());
         saveAll();

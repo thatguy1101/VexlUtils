@@ -1,13 +1,16 @@
 package mc.mod.vexlUtils;
 
+import mc.mod.vexlUtils.admin.AdminGUI;
+import mc.mod.vexlUtils.chat.ChatManager;
+import mc.mod.vexlUtils.command.AdminCommand;
 import mc.mod.vexlUtils.command.DisguiseCommand;
 import mc.mod.vexlUtils.command.PvCommand;
 import mc.mod.vexlUtils.command.VCommand;
 import mc.mod.vexlUtils.command.WarpCommand;
 import mc.mod.vexlUtils.disguise.DisguiseManager;
-import mc.mod.vexlUtils.gambling.GamblingGUI;
-import mc.mod.vexlUtils.gambling.GamblingManager;
+import mc.mod.vexlUtils.jukebox.JukeboxListener;
 import mc.mod.vexlUtils.lock.DoorListener;
+import mc.mod.vexlUtils.maintenance.MaintenanceManager;
 import mc.mod.vexlUtils.shop.SignShopListener;
 import mc.mod.vexlUtils.util.MessageUtil;
 import mc.mod.vexlUtils.vault.VaultListener;
@@ -32,9 +35,9 @@ public final class VexlUtils extends JavaPlugin implements Listener {
     private MessageUtil messages;
     private VaultManager vaultManager;
     private DisguiseManager disguiseManager;
-    private GamblingManager gamblingManager;
-    private GamblingGUI gamblingGUI;
     private WarpManager warpManager;
+    private MaintenanceManager maintenanceManager;
+    private AdminGUI adminGUI;
 
     @Override
     public void onEnable() {
@@ -50,16 +53,28 @@ public final class VexlUtils extends JavaPlugin implements Listener {
 
         if (!setupEconomy()) {
             getLogger().warning("No Vault economy provider found yet (need Vault + an economy plugin, e.g. CMI). " +
-                    "Gambling and paid shops disabled until one registers.");
+                    "Paid shops disabled until one registers.");
         }
         // catch economy plugins (like CMI) that register their provider a moment after us
         getServer().getPluginManager().registerEvents(this, this);
+        // belt-and-suspenders: some economy plugins (e.g. CMI) can register their Vault provider
+        // slightly after plugin enable order would suggest, so retry a couple of times too.
+        getServer().getScheduler().runTaskLater(this, () -> {
+            if (economy == null && setupEconomy()) {
+                getLogger().info("Economy hooked on delayed retry.");
+            }
+        }, 20L);
+        getServer().getScheduler().runTaskLater(this, () -> {
+            if (economy == null && setupEconomy()) {
+                getLogger().info("Economy hooked on delayed retry.");
+            }
+        }, 100L);
 
         this.vaultManager = new VaultManager(this);
         this.disguiseManager = new DisguiseManager(this);
-        this.gamblingManager = new GamblingManager(this);
-        this.gamblingGUI = new GamblingGUI(this);
         this.warpManager = new WarpManager(this);
+        this.maintenanceManager = new MaintenanceManager(this);
+        this.adminGUI = new AdminGUI(this);
 
         VCommand vCommand = new VCommand(this);
         registerCommand("vexl", vCommand, vCommand);
@@ -74,27 +89,21 @@ public final class VexlUtils extends JavaPlugin implements Listener {
         WarpCommand warpCommand = new WarpCommand(this);
         registerCommand("playerwarp", warpCommand, warpCommand);
 
-        registerCommand("vegas", (sender, command, label, args) -> {
-            if (sender instanceof org.bukkit.entity.Player player) {
-                if (!player.hasPermission("vexlutils.gambling")) {
-                    messages.error(player, "You don't have permission to gamble.");
-                    return true;
-                }
-                gamblingGUI.openMain(player);
-            } else {
-                sender.sendMessage("Players only.");
-            }
-            return true;
-        }, null);
+        AdminCommand adminCommand = new AdminCommand(this, adminGUI);
+        registerCommand("va", adminCommand, null);
+        registerCommand("vadmin", adminCommand, null);
 
         getServer().getPluginManager().registerEvents(new SignShopListener(this), this);
         getServer().getPluginManager().registerEvents(new DoorListener(this), this);
         getServer().getPluginManager().registerEvents(new VaultListener(this), this);
         getServer().getPluginManager().registerEvents(new WarpListener(this), this);
+        getServer().getPluginManager().registerEvents(new JukeboxListener(this), this);
+        getServer().getPluginManager().registerEvents(new ChatManager(this), this);
+        getServer().getPluginManager().registerEvents(maintenanceManager, this);
         getServer().getPluginManager().registerEvents(disguiseManager, this);
-        getServer().getPluginManager().registerEvents(gamblingGUI, this);
+        getServer().getPluginManager().registerEvents(adminGUI, this);
 
-        getLogger().info("VexlUtils enabled. /vexl (alias /v), /pv, /vegas, /disguise, /undisguise, /playerwarp (aliases /pwarp, /pw) are live.");
+        getLogger().info("VexlUtils enabled. /vexl (alias /v), /pv, /disguise, /undisguise, /playerwarp (aliases /pwarp, /pw), /va (alias /vadmin) are live.");
     }
 
     @Override
@@ -167,15 +176,15 @@ public final class VexlUtils extends JavaPlugin implements Listener {
         return disguiseManager;
     }
 
-    public GamblingManager getGamblingManager() {
-        return gamblingManager;
-    }
-
-    public GamblingGUI getGamblingGUI() {
-        return gamblingGUI;
-    }
-
     public WarpManager getWarpManager() {
         return warpManager;
+    }
+
+    public MaintenanceManager getMaintenanceManager() {
+        return maintenanceManager;
+    }
+
+    public AdminGUI getAdminGUI() {
+        return adminGUI;
     }
 }

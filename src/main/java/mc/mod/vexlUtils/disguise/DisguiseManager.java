@@ -13,12 +13,16 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.Team;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 public class DisguiseManager implements Listener {
+
+    private static final String NO_COLLIDE_TEAM = "vexl_nocollide";
 
     private final VexlUtils plugin;
     private final Map<UUID, Disguise> disguised = new HashMap<>();
@@ -32,19 +36,30 @@ public class DisguiseManager implements Listener {
         return disguised.containsKey(player.getUniqueId());
     }
 
+    private Team getNoCollideTeam() {
+        Scoreboard scoreboard = plugin.getServer().getScoreboardManager().getMainScoreboard();
+        Team team = scoreboard.getTeam(NO_COLLIDE_TEAM);
+        if (team == null) {
+            team = scoreboard.registerNewTeam(NO_COLLIDE_TEAM);
+            team.setOption(Team.Option.COLLISION_RULE, Team.OptionStatus.NEVER);
+        }
+        return team;
+    }
+
     public boolean disguise(Player player, EntityType type) {
         if (!type.isAlive() || type == EntityType.PLAYER) {
             return false;
         }
-        undisguise(player);
+        undisguise(player); // clear any existing disguise first
 
         boolean invulnerable = plugin.getConfig().getBoolean("disguise.mob-invulnerable", true);
+        boolean showNametag = plugin.getConfig().getBoolean("disguise.show-nametag", false);
         LivingEntity mob;
         try {
             Location loc = player.getLocation();
             mob = (LivingEntity) player.getWorld().spawnEntity(loc, type);
             mob.setCustomName(player.getName());
-            mob.setCustomNameVisible(true);
+            mob.setCustomNameVisible(showNametag);
             mob.setInvulnerable(invulnerable);
             mob.setSilent(false);
             mob.setAI(false);
@@ -63,11 +78,21 @@ public class DisguiseManager implements Listener {
 
         shadowMobOwners.put(mob.getUniqueId(), player.getUniqueId());
 
+        // Real fix for the "stuck walking" collision-fight bug: put the mob on a team with
+        // collision rule NEVER, which reliably suppresses entity-vs-entity push physics.
+        // setCollidable(false) alone has known reliability issues on some versions.
+        try {
+            getNoCollideTeam().addEntry(mob.getUniqueId().toString());
+        } catch (Exception e) {
+            plugin.getLogger().warning("Failed to add disguise mob to no-collide team: " + e.getMessage());
+        }
+
         for (Player other : plugin.getServer().getOnlinePlayers()) {
             if (!other.equals(player)) {
                 try {
                     other.hidePlayer(plugin, player);
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             }
         }
 
@@ -76,7 +101,8 @@ public class DisguiseManager implements Listener {
             try {
                 player.addPotionEffect(new org.bukkit.potion.PotionEffect(
                         org.bukkit.potion.PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 0, false, false, false));
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
 
         int interval = Math.max(1, plugin.getConfig().getInt("disguise.sync-interval", 1));
@@ -87,7 +113,7 @@ public class DisguiseManager implements Listener {
             }
             mob.teleport(player.getLocation());
             mob.setSwimming(player.isSwimming());
-            // Fixed: removed mob.setSneaking() since it doesn't exist for generic LivingEntity
+            mob.setSneaking(player.isSneaking());
         }, 0L, interval);
 
         disguised.put(player.getUniqueId(), new Disguise(mob, task));
@@ -102,6 +128,10 @@ public class DisguiseManager implements Listener {
         }
         d.task.cancel();
         shadowMobOwners.remove(d.mob.getUniqueId());
+        try {
+            getNoCollideTeam().removeEntry(d.mob.getUniqueId().toString());
+        } catch (Exception ignored) {
+        }
         if (!d.mob.isDead()) {
             d.mob.getWorld().spawnParticle(org.bukkit.Particle.CLOUD, d.mob.getLocation(), 15, 0.3, 0.5, 0.3, 0.02);
             d.mob.remove();
@@ -125,6 +155,10 @@ public class DisguiseManager implements Listener {
                 if (d != null) {
                     shadowMobOwners.remove(d.mob.getUniqueId());
                     d.task.cancel();
+                    try {
+                        getNoCollideTeam().removeEntry(d.mob.getUniqueId().toString());
+                    } catch (Exception ignored) {
+                    }
                     if (!d.mob.isDead()) {
                         d.mob.remove();
                     }

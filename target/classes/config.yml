@@ -25,7 +25,7 @@ shops:
   show-floating-item: true     # spawn a small floating item display above the sign
 
 # ----------------------------------------------------------
-#  Doors: [Public] signs + direct double-door sync, [Private] locks
+#  Doors: blank sign auto-locks [Private]; owner shift-right-clicks to toggle [Public]
 # ----------------------------------------------------------
 doors:
   # If true, directly opening ANY door/gate/trapdoor also opens its adjacent matching
@@ -39,50 +39,40 @@ locks:
   auto-lock-on-blank-sign: true   # blank sign placed on a door -> auto [Private] + your name
 
 # ----------------------------------------------------------
-#  Gambling  (/vexl vegas, /vegas, /v vegas - all open a GUI)
+#  Chat management - moderation only, never touches your chat format/prefixes
 # ----------------------------------------------------------
-gambling:
-  min-bet: 10
-  max-bet: 10000
-  quick-bets: [100, 500, 1000, 5000, 10000]
+chat:
+  enabled: true
 
-  slots:
-    win-chance: 0.35
-    jackpot-chance: 0.03
-    payout-multiplier: 2.0
-    jackpot-multiplier: 5.0
+  swear-filter:
+    enabled: true
+    # Add your own words here - left empty on purpose. Whole-word match, case-insensitive,
+    # censored with asterisks (message still sends, just censored).
+    words: []
 
-  coinflip:
-    payout-multiplier: 1.9
+  spam:
+    enabled: true
+    cooldown-ms: 1500   # minimum time between messages per player
 
-  dice:
-    payout-multiplier: 5.5
+  anti-repeat:
+    enabled: true        # blocks sending the exact same message twice in a row
 
-  roulette:
-    red-black-multiplier: 1.9
-    green-multiplier: 8.0
-    green-chance: 0.10
+  caps:
+    enabled: true
+    min-length: 8         # messages shorter than this are never touched
+    max-percent: 0.6      # if more than 60% of letters are caps, message is lowercased
 
-  blackjack:
-    payout-multiplier: 2.0        # standard win
-    blackjack-multiplier: 2.5     # natural 21 on the deal
-
-  mines:
-    grid-size: 25        # 5x5
-    bomb-count: 5
-    # multiplier awarded per safe tile revealed (compounding)
-    multiplier-per-tile: 0.25
-
-  wheel:
-    # weighted outcomes - must sum sensibly, not required to total any specific number
-    segments:
-      "0": 30
-      "0.5": 20
-      "1.5": 20
-      "2": 15
-      "3": 8
-      "5": 5
-      "10": 2
+# ----------------------------------------------------------
+#  Maintenance mode - /vexl maintenance <on|off>, or via /va admin GUI
+# ----------------------------------------------------------
+maintenance:
+  motd-line1: "&5&lVEXLSMP"
+  motd-line2: "&cServer is under maintenance"
+  kick-message:
+    - "&5&lVEXLSMP"
+    - ""
+    - "&cThe server is currently under maintenance."
+    - "&7Please check back soon!"
 
 # ----------------------------------------------------------
 #  Disguise
@@ -91,6 +81,7 @@ disguise:
   sync-interval: 1              # ticks between shadow-mob position sync
   mob-invulnerable: true        # if true, the shadow mob can't be damaged/killed
   hide-self: true               # apply self-invisibility so you don't see your own real body
+  show-nametag: false           # if true, shows your real username above the disguise mob
 
 # ----------------------------------------------------------
 #  Player warps ([Warp] signs, /playerwarp | /pwarp | /pw)
